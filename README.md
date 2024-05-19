@@ -15,7 +15,7 @@ Setup the container in these five steps:
 
 | Image | Tag | Build |
 |:------------------:|:--------------:|:-----------------:|
-| ghcr.io/lizenzfass78851/ubuntu-xrdp | stable | [![Build and Publish Docker Image](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/build_docker_image.yml/badge.svg?branch=stable)](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/build_docker_image.yml) | 
+| ghcr.io/lizenzfass78851/ubuntu-xrdp | stable | [![Build and Publish Docker Image](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml/badge.svg?branch=stable)](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml) | 
 
 
 ## Deploy via docker run
