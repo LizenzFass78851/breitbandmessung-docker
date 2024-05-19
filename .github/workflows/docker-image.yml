@@ -2,9 +2,7 @@ name: Build and Publish Docker Image
 
 on:
   push:
-    branches: [ "master", "staging" ]
-##  schedule:
-##    - cron: '10 14 */3 * 2'
+    branches: [ "stable" ]
   workflow_dispatch:
 
 env:
@@ -13,13 +11,11 @@ env:
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
-  build:
+  build_amd64:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
-    if: github.repository == 'fabianbees/breitbandmessung-docker'
 
     steps:
       - name: Checkout Dockerfile
@@ -51,11 +47,11 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
-            latest=${{ startsWith(github.ref, 'refs/heads/master') }}
+            latest=${{ startsWith(github.ref, 'refs/heads/stable') }}
 
       - name: Build and push main Docker image
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           build-args: GH_TOKEN=${{ github.token }}
           context: .
@@ -66,4 +62,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
