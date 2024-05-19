@@ -4,7 +4,7 @@ FROM jlesage/baseimage-gui:ubuntu-22.04-v4
 
 # Install packages
 RUN apt update && apt upgrade -yy && \
-  apt install -y apt-utils nano libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libgbm-dev libxss1 libasound2 wget xterm libnss3 locales xdotool xclip && \
+  apt install -y apt-utils nano libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libgbm-dev libxss1 libasound2 curl xterm libnss3 locales xdotool xclip && \
   locale-gen de_DE.UTF-8 && \
   rm -rf /var/cache/apt /var/lib/apt/lists
 
@@ -18,10 +18,13 @@ COPY rootfs/ /
 
 # Set internal environment variables.
 # see: https://download.breitbandmessung.de/bbm/
+ENV YAML_LINK=https://download.breitbandmessung.de/bbm/latest-linux.yml
+RUN curl --output /dev/null --silent --fail -r 0-0 "$YAML_LINK"
+
 RUN \
     set-cont-env APP_NAME "Breitbandmessung" && \
-    set-cont-env APP_VERSION "3.6.0" && \
-    set-cont-env APP_SHA256SUM "8d4a7843db6247f58b913347cfdee3d1e13f5b071f145deeb744bd37833be4e7" && \
+    set-cont-env APP_VERSION "" && \
+    set-cont-env APP_SHA512SUM "" && \
     set-cont-env DEBIAN_FRONTEND "noninteractive" && \
     set-cont-env LANG "de_DE.UTF-8" &&  \
     true
