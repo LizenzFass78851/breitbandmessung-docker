@@ -1,37 +1,34 @@
-name: Build and Publish Docker Image
+name: Build as Matrix and Publish Docker Image
 
 on:
-  push:
-    branches: [ "master", "staging" ]
-  pull_request:
-    branches: [ "master", "staging" ]
-##  schedule:
-##    - cron: '10 14 */3 * 2'
+  schedule:
+    - cron: '10 14 */3 * 2'
   workflow_dispatch:
-
-concurrency:
-  group: ${{ (github.event_name == 'pull_request') && github.workflow && '-' && github.event.pull_request.number || github.run_id }}
-  cancel-in-progress: ${{ (github.event_name == 'pull_request') && true || false }}
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.event.pull_request.base.repo.name || github.repository }}
+  IMAGE_NAME: ${{ github.repository }}
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
-  build:
+  build_amd64:
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ["stable", "autoupdate"]
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
-
-    if: github.repository == 'fabianbees/breitbandmessung-docker'
+    env:
+      TARGET_BRANCH: refs/heads/${{ matrix.target }}
 
     steps:
       - name: Checkout Dockerfile
         id: checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ matrix.target }}
 
       - name: Setup QEMU
         id: qemu
@@ -46,7 +43,6 @@ jobs:
 
       - name: Login to GitHub Container Registry
         id: ghcr
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -59,7 +55,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
-            latest=${{ startsWith(github.ref, 'refs/heads/master') }}
+            latest=${{ startsWith(env.TARGET_BRANCH, 'refs/heads/stable') }}
+          tags: ${{ matrix.target }}
 
       - name: Build and push main Docker image
         id: build
@@ -69,8 +66,8 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
-          cache-to: ${{ github.event_name != 'pull_request' && 'type=gha,mode=max,ignore-error=true' || '' }}
-          cache-from: ${{ github.event_name != 'pull_request' && 'type=gha' || '' }}
-          push: ${{ github.event_name != 'pull_request' }}
+          cache-to: type=gha,mode=max,ignore-error=true
+          cache-from: type=gha
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
