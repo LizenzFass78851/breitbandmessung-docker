@@ -13,15 +13,9 @@ Setup the container in these five steps:
 
 ## Tags
 
-| Registry | Image | Tag | Build |
-|:------------------:|:------------------:|:--------------:|:-----------------:|
-| [Docker-Hub](https://hub.docker.com/r/fabianbees/breitbandmessung/tags) | fabianbees/breitbandmessung | latest | ![pipeline status](https://gitlab.fabianbees.de/fabianbees/breitbandmessung-docker/badges/master/pipeline.svg) |
-| [Github (ghcr.io)](https://github.com/fabianbees/breitbandmessung-docker/pkgs/container/breitbandmessung-docker/versions?filters%5Bversion_type%5D=tagged) | ghcr.io/fabianbees/breitbandmessung-docker | latest | [![Build and Publish Docker Image](https://github.com/fabianbees/breitbandmessung-docker/actions/workflows/build_docker_image.yml/badge.svg?branch=master)](https://github.com/fabianbees/breitbandmessung-docker/actions/workflows/build_docker_image.yml) |
-| [Github (ghcr.io)](https://github.com/fabianbees/breitbandmessung-docker/pkgs/container/breitbandmessung-docker/versions?filters%5Bversion_type%5D=tagged) | ghcr.io/fabianbees/breitbandmessung-docker | staging | [![Build and Publish Docker Image](https://github.com/fabianbees/breitbandmessung-docker/actions/workflows/build_docker_image.yml/badge.svg?branch=staging)](https://github.com/fabianbees/breitbandmessung-docker/actions/workflows/build_docker_image.yml) |
-
-
-
-
+| Image | Tag | Build |
+|:------------------:|:--------------:|:-----------------:|
+| ghcr.io/lizenzfass78851/breitbandmessung-docker | stable | [![Build and Publish Docker Image](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml/badge.svg?branch=stable)](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml) | 
 
 
 ## Deploy via docker run
@@ -34,7 +28,7 @@ docker run -d \
     -e TZ=Europe/Berlin  `#optional (default)` \
     -v $PWD/breitbandmessung/data:/config/xdg/config/Breitbandmessung \
     -p 5800:5800 \
-    fabianbees/breitbandmessung:latest
+    ghcr.io/lizenzfass78851/breitbandmessung-docker:latest
 ```
 
 Appdata for the Breitbandmessung Desktop App lives in the following directory (inside the container): ```/config/xdg/config/Breitbandmessung```. Therefore this directory should be mounted to a host directory.
@@ -45,7 +39,7 @@ Appdata for the Breitbandmessung Desktop App lives in the following directory (i
 Deploy container via docker-compose v3 schema:
 
 ```bash
-git clone https://github.com/fabianbees/breitbandmessung-docker.git
+git clone https://github.com/LizenzFass78851/breitbandmessung-docker.git
 
 cd breitbandmessung-docker
 
@@ -57,7 +51,7 @@ docker compose up
 version: "3.8"
 services:
   breitband-desktop:
-    image: fabianbees/breitbandmessung:latest
+    image: ghcr.io/lizenzfass78851/breitbandmessung-docker:latest
     container_name: breitband-desktop
     environment:
       - TZ=Europe/Berlin
@@ -138,7 +132,7 @@ You can also build the docker container localy for development.
 You can do this with the following commands:
 
 ```bash
-git clone https://github.com/fabianbees/breitbandmessung-docker.git
+git clone https://github.com/LizenzFass78851/breitbandmessung-docker.git
 
 cd breitbandmessung-docker
 
