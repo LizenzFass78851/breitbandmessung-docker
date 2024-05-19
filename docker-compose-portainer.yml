@@ -5,7 +5,7 @@
 version: "3.8"
 services:
   breitband-desktop:
-    image: fabianbees/breitbandmessung:latest
+    image: ghcr.io/lizenzfass78851/breitbandmessung-docker:latest
     container_name: breitband-desktop
     environment:
       - TZ=Europe/Berlin
