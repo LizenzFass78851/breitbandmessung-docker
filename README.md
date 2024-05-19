@@ -15,7 +15,7 @@ Setup the container in these five steps:
 
 | Image | Tag | Build |
 |:------------------:|:--------------:|:-----------------:|
-| ghcr.io/lizenzfass78851/ubuntu-xrdp | stable | [![Build and Publish Docker Image](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml/badge.svg?branch=stable)](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml) | 
+| ghcr.io/lizenzfass78851/breitbandmessung-docker | stable | [![Build and Publish Docker Image](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml/badge.svg?branch=stable)](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml) | 
 
 
 ## Deploy via docker run
@@ -28,7 +28,7 @@ docker run -d \
     -e TZ=Europe/Berlin  `#optional (default)` \
     -v $PWD/breitbandmessung/data:/config/xdg/config/Breitbandmessung \
     -p 5800:5800 \
-    ghcr.io/lizenzfass78851/breitbandmessung:latest
+    ghcr.io/lizenzfass78851/breitbandmessung-docker:latest
 ```
 
 Appdata for the Breitbandmessung Desktop App lives in the following directory (inside the container): ```/config/xdg/config/Breitbandmessung```. Therefore this directory should be mounted to a host directory.
@@ -51,7 +51,7 @@ docker compose up
 version: "3.8"
 services:
   breitband-desktop:
-    image: ghcr.io/lizenzfass78851/breitbandmessung:latest
+    image: ghcr.io/lizenzfass78851/breitbandmessung-docker:latest
     container_name: breitband-desktop
     environment:
       - TZ=Europe/Berlin
@@ -132,7 +132,7 @@ You can also build the docker container localy for development.
 You can do this with the following commands:
 
 ```bash
-git clone https://github.com/fabianbees/breitbandmessung-docker.git
+git clone https://github.com/LizenzFass78851/breitbandmessung-docker.git
 
 cd breitbandmessung-docker
 
