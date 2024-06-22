@@ -8,10 +8,6 @@ env:
   IMAGE_NAME: ${{ github.event.pull_request.base.repo.name }}
   IMAGE_TAG: ${{ github.sha }}
 
-env:
-  IMAGE_NAME: ${{ github.event.pull_request.base.repo.name }}
-  IMAGE_TAG: ${{ github.sha }}
-
 jobs:
 
   build:
