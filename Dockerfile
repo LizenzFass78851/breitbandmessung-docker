@@ -4,7 +4,7 @@ FROM jlesage/baseimage-gui:ubuntu-24.04-v4
 
 # Install packages
 RUN apt update && apt dist-upgrade -yy && \
-  apt install -y apt-utils nano libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libgbm-dev libxss1 libasound2 curl xterm libnss3 locales xdotool xclip && \
+  apt install -y apt-utils nano libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libgbm-dev libxss1 libasound2t64 curl xterm libnss3 locales xdotool xclip && \
   locale-gen de_DE.UTF-8 && \
   rm -rf /var/cache/apt /var/lib/apt/lists
 
