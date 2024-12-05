@@ -1,5 +1,5 @@
 # Pull base image.
-FROM jlesage/baseimage-gui:ubuntu-22.04-v4.6.4
+FROM jlesage/baseimage-gui:ubuntu-22.04-v4
 
 
 # Install packages
