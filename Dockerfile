@@ -8,15 +8,6 @@ RUN apt update && apt dist-upgrade -yy && \
   locale-gen de_DE.UTF-8 && \
   rm -rf /var/cache/apt /var/lib/apt/lists
 
-# Workaround for "Generate and install favicons" without errors
-RUN apt update && apt install -y imagemagick && \
-  rm -rf /var/cache/apt /var/lib/apt/lists && \
-  if [ ! -f /usr/bin/magick ] && [ -f /usr/bin/convert ]; then \
-    echo -e '#!/bin/sh\nexec "$@"' | tee /usr/local/bin/magick && \
-    ln -s /usr/local/bin/magick /usr/bin/magick && \
-    chmod +x /usr/local/bin/magick; \
-  fi
-
 # Generate and install favicons.
 # alternative logo: https://breitbandmessung.de/images/breitbandmessung-logo.png
 RUN APP_ICON_URL=https://www.breitbandmessung.de/public/images/appicon-512.png && \
