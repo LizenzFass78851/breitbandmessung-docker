@@ -1,5 +1,5 @@
 # Pull base image.
-FROM jlesage/baseimage-gui:ubuntu-22.04-v4.7.0
+FROM jlesage/baseimage-gui:ubuntu-22.04-v4.7.1
 
 
 # Install packages
@@ -7,15 +7,6 @@ RUN apt update && apt dist-upgrade -yy && \
   apt install -y apt-utils nano libatk1.0-0 libatk-bridge2.0-0 libgtk-3-0 libgbm-dev libxss1 libasound2 wget xterm libnss3 locales xdotool xclip && \
   locale-gen de_DE.UTF-8 && \
   rm -rf /var/cache/apt /var/lib/apt/lists
-
-# Workaround for "Generate and install favicons" without errors
-RUN apt update && apt install -y imagemagick && \
-  rm -rf /var/cache/apt /var/lib/apt/lists && \
-  if [ ! -f /usr/bin/magick ] && [ -f /usr/bin/convert ]; then \
-    echo -e '#!/bin/sh\nexec "$@"' | tee /usr/local/bin/magick && \
-    ln -s /usr/local/bin/magick /usr/bin/magick && \
-    chmod +x /usr/local/bin/magick; \
-  fi
 
 # Generate and install favicons.
 # alternative logo: https://breitbandmessung.de/images/breitbandmessung-logo.png
