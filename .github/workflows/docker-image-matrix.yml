@@ -5,23 +5,27 @@ on:
     - cron: '10 14 */3 * 2'
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   IMAGE_TAG: ${{ github.sha }}
 
 jobs:
-  build_amd64:
+  build_matrix:
     strategy:
       fail-fast: false
       matrix:
         target: ["stable", "autoupdate"]
+
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
-    env:
-      TARGET_BRANCH: refs/heads/${{ matrix.target }}
 
     steps:
       - name: Checkout Dockerfile
@@ -55,7 +59,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           flavor: |
-            latest=${{ startsWith(env.TARGET_BRANCH, 'refs/heads/stable') }}
+            latest=${{ matrix.target == 'stable' }}
           tags: ${{ matrix.target }}
 
       - name: Build and push main Docker image
