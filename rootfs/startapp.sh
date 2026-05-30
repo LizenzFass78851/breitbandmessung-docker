@@ -1,5 +1,9 @@
-#!/bin/bash
+#!/bin/sh
+#
+# NOTE: Parameters to pass to Breitbandmessung are defined via the `params` file of the
+#       app service.
+#
 
-# --force-renderer-accessibility makes Electron publish its widget tree on the
-# accessibility bus, which is how the automation service drives the app.
-exec breitbandmessung --no-sandbox --force-renderer-accessibility
+rm -rf /config/xdg/config/Breitbandmessung/Singleton*
+
+exec breitbandmessung "$@"

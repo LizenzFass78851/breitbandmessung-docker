@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -u # Treat unset variables as an error.
+
+printf "%s\n" "--no-sandbox"
+printf "%s\n" "--force-renderer-accessibility"
+printf "%s\n" "--disable-dev-shm-usage"
+printf "%s\n" "--ignore-gpu-blocklist"
