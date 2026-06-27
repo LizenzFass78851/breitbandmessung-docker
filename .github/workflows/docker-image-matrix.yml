@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ["stable", "autoupdate"]
+        target: ["stable", "future"]
 
     runs-on: ubuntu-latest
 
