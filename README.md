@@ -13,10 +13,10 @@ Setup the container in these five steps:
 
 ## Tags
 
-| Image | Tag | Build | Latest |
+| Image | Tag | Build | Latest | 
 |:------------------:|:--------------:|:-----------------:|:-----------------:|
-| ghcr.io/lizenzfass78851/breitbandmessung-docker | stable | [![Build and Publish Docker Image](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml/badge.svg?branch=stable)](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml) | 📌 |
-| ghcr.io/lizenzfass78851/breitbandmessung-docker | autoupdate | [![Build and Publish Docker Image](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml/badge.svg?branch=autoupdate)](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml) |  |
+| ghcr.io/lizenzfass78851/breitbandmessung-docker | stable | [![Build and Publish Docker Image](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml/badge.svg?branch=stable)](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml) | 📌 | 
+| ghcr.io/lizenzfass78851/breitbandmessung-docker | future | [![Build and Publish Docker Image](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml/badge.svg?branch=future)](https://github.com/LizenzFass78851/breitbandmessung-docker/actions/workflows/docker-image.yml) |  |
 
 - Matrix Build State
 
