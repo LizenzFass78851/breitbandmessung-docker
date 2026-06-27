@@ -2,9 +2,9 @@ name: Build and Publish Docker Image
 
 on:
   push:
-    branches: [ "stable", "autoupdate" ]
+    branches: [ "stable", "future" ]
   pull_request:
-    branches: [ "stable", "autoupdate" ]
+    branches: [ "stable", "future" ]
   workflow_dispatch:
 
 concurrency:
