@@ -8,7 +8,7 @@ on:
 jobs:
   update-and-deploy:
     runs-on: ubuntu-slim
-    if: github.repository == 'LizenzFass78851/docker-iventoy'
+    if: github.repository == 'LizenzFass78851/breitbandmessung-docker'
     env:           
       GIT_USER: github-actions[bot]
       GIT_EMAIL: github-actions[bot]@users.noreply.github.com
