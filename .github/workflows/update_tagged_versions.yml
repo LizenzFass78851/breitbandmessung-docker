@@ -91,7 +91,7 @@ jobs:
           git config --local user.name "$GIT_USER"
           git config --local user.email "$GIT_EMAIL"
           if ! git diff --cached --quiet; then
-            git commit -m "feat: Update Breitbandmessung to ${APP_VERSION}"
+            git commit -m "breitbandmessung version bump to ${APP_VERSION}"
             echo "updated=true" >> "$GITHUB_OUTPUT"
           else
             echo "updated=false" >> "$GITHUB_OUTPUT"
