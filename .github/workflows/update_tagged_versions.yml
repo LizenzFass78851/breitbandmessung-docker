@@ -50,13 +50,11 @@ jobs:
 
       - name: Patch Dockerfile
         id: patch_dockerfile
+        shell: python3
         env:
           APP_VERSION: ${{ steps.detect_release.outputs.version }}
           APP_SHA256SUM: ${{ steps.detect_release.outputs.sha256 }}
         run: |
-          set -euo pipefail
-
-          python - <<'PY'
           import os
           import re
           from pathlib import Path
@@ -84,18 +82,19 @@ jobs:
               raise SystemExit("Failed to update the expected Dockerfile variables")
 
           dockerfile.write_text(content)
-          PY
 
+      - name: update build
+        id: update_build
+        run: |
           # Commit changes if any
           git add Dockerfile
-          git status
-          git config --local user.name ${{ env.GIT_USER }}
-          git config --local user.email ${{ env.GIT_EMAIL }}
+          git config --local user.name "$GIT_USER"
+          git config --local user.email "$GIT_EMAIL"
           if ! git diff --cached --quiet; then
-            echo "updated=true" >> $GITHUB_OUTPUT
             git commit -m "feat: Update Breitbandmessung to ${APP_VERSION}"
+            echo "updated=true" >> "$GITHUB_OUTPUT"
           else
-            echo "updated=false" >> $GITHUB_OUTPUT
+            echo "updated=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: create_pr_branchname
