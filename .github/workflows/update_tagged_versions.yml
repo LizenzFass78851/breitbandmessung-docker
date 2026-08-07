@@ -1,0 +1,159 @@
+name: Update Tagged Versions
+
+on:
+  schedule:
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-and-deploy:
+    runs-on: ubuntu-slim
+    if: github.repository == 'LizenzFass78851/breitbandmessung-docker'
+    env:           
+      GIT_USER: github-actions[bot]
+      GIT_EMAIL: github-actions[bot]@users.noreply.github.com
+      PR_BRANCH_PREFIX: feat/update-tagged_versions
+      YAML_URL: https://download.breitbandmessung.de/bbm/latest-linux.yml
+      BASE_URL: https://download.breitbandmessung.de/bbm
+
+    steps:
+      - name: clone
+        uses: actions/checkout@v7
+        with:
+          clean: false
+
+      - name: Detect latest Breitbandmessung release
+        id: detect_release
+        run: |
+          if ! YAML=$(wget -qO- "$YAML_URL"); then
+            echo "::error::Failed to download release metadata from $YAML_URL"
+            exit 1
+          fi
+
+          VERSION=$(echo "$YAML" | sed -n 's/^version: //p' | tr -d '\r' | head -n1)
+          DOWNLOAD_PATH=$(echo "$YAML" | sed -n 's/^path: //p' | tr -d '\r' | head -n1)
+
+          if [ -z "$VERSION" ] || [ -z "$DOWNLOAD_PATH" ]; then
+            echo "::error::Unable to parse version/path from release metadata"
+            exit 1
+          fi
+
+          wget -q "$BASE_URL/$DOWNLOAD_PATH" -O /tmp/breitbandmessung.deb
+          SHA256=$(sha256sum /tmp/breitbandmessung.deb | awk '{print $1}')
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "path=$DOWNLOAD_PATH" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "::notice::Latest Breitbandmessung version: $VERSION"
+
+      - name: update build
+        id: update_build
+        run: |
+          APP_VERSION=${{ steps.detect_release.outputs.version }}
+          APP_SHA256SUM=${{ steps.detect_release.outputs.sha256 }}
+
+          echo "APP_VERSION: $APP_VERSION"
+          echo "APP_SHA256SUM: $APP_SHA256SUM"
+
+          [ -n "$APP_VERSION" ] && [ "$APP_VERSION" != "null" ] && \
+            sed -i "s|set-cont-env APP_VERSION \".*\" && \\\\|set-cont-env APP_VERSION \"$APP_VERSION\" \&\& \\\\|g" "$GITHUB_WORKSPACE/Dockerfile"
+
+          [ -n "$APP_SHA256SUM" ] && [ "$APP_SHA256SUM" != "null" ] && \
+            sed -i "s|set-cont-env APP_SHA256SUM \".*\" && \\\\|set-cont-env APP_SHA256SUM \"$APP_SHA256SUM\" \&\& \\\\|g" "$GITHUB_WORKSPACE/Dockerfile"
+
+          # Commit changes if any
+          git add Dockerfile
+          git config --local user.name "$GIT_USER"
+          git config --local user.email "$GIT_EMAIL"
+          if ! git diff --cached --quiet; then
+            git commit -m "breitbandmessung version bump to ${APP_VERSION}"
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: create_pr_branchname
+        id: create_pr_branchname
+        run: |
+          echo "Generating Dockerfile hash"
+          hash=$(sha256sum "$GITHUB_WORKSPACE/Dockerfile" | awk '{print $1}')
+          if [[ "$hash" =~ ^[a-f0-9]{64}$ ]]; then
+            echo "HASH=$hash" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::No valid SHA256" >&2
+            exit 1
+          fi
+
+      - name: check if branch as open PR
+        id: check_open_pr
+        env:
+          PR_BRANCH: ${{ env.PR_BRANCH_PREFIX }}-${{ steps.create_pr_branchname.outputs.HASH }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OPEN_PR=$(gh pr list --state open --head "$PR_BRANCH" --json number -q '.[0].number')
+          if [ -z "$OPEN_PR" ]; then
+            echo "NO_OPEN_PR=true" >> $GITHUB_OUTPUT
+          else
+            echo "NO_OPEN_PR=false" >> $GITHUB_OUTPUT
+          fi
+      - name: check if existing duplicate open PRs
+        id: check_duplicate_pr
+        if: ${{ steps.check_open_pr.outputs.NO_OPEN_PR == 'true' }}
+        env:
+          PR_BRANCH_PATTERN: ${{ env.PR_BRANCH_PREFIX }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          OPEN_PRS=$(gh pr list --state open --json number,headRefName \
+            | jq -r --arg prefix "$PR_BRANCH_PATTERN" '.[] | select(.headRefName | startswith($prefix)) | .number')
+          echo "Found open PRs with branch pattern '$PR_BRANCH_PATTERN': $OPEN_PRS"
+          echo "OPEN_PRS=$OPEN_PRS" >> $GITHUB_OUTPUT
+      - name: Close duplicate PRs
+        if: ${{ steps.check_open_pr.outputs.NO_OPEN_PR == 'true' }}
+        env:
+          OPEN_PRS: ${{ steps.check_duplicate_pr.outputs.OPEN_PRS }}
+          GH_TOKEN: ${{ secrets.PR_TOKEN }}
+        run: |
+          if [ -n "$OPEN_PRS" ]; then
+            while read -r PR_NUMBER; do
+              gh pr close "$PR_NUMBER" -d
+              echo "::notice::Closed duplicate PR #$PR_NUMBER"
+            done <<< "$OPEN_PRS"
+          fi
+      - name: Create Pull Request
+        if: ${{ steps.check_open_pr.outputs.NO_OPEN_PR == 'true' }}
+        uses: peter-evans/create-pull-request@v8
+        id: create_pr
+        with:
+          token: ${{ secrets.PR_TOKEN }}
+          title: 'Update Tagged Versions'
+          branch: ${{ env.PR_BRANCH_PREFIX }}-${{ steps.create_pr_branchname.outputs.HASH }}
+          delete-branch: true
+          assignees: ${{ github.actor }}
+
+      - name: Comment PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: ${{ steps.create_pr.outputs.pull-request-number != '' }}
+        run: |
+          # create comment content
+          cat > /tmp/comment-content.txt <<EOF
+          ### Breitbandmessung Version
+          ${{ steps.detect_release.outputs.version }}
+          EOF
+          # create comment
+          gh pr comment "${{ steps.create_pr.outputs.pull-request-number }}" --body-file /tmp/comment-content.txt
+
+#     - name: push
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       run: |
+#         git config --local credential.helper '!x() { echo "password=$GITHUB_TOKEN"; };x'
+#         git push origin $GITHUB_REF_NAME
+
+#     - name: trigger build workflow
+#       if: steps.update_build.outputs.updated == 'true'
+#       env:
+#         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#       run: |
+#         gh workflow run docker-image.yml
+
