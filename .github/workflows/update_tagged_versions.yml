@@ -46,45 +46,21 @@ jobs:
           echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
           echo "::notice::Latest Breitbandmessung version: $VERSION"
 
-      - name: Patch Dockerfile
-        id: patch_dockerfile
-        env:
-          APP_VERSION: ${{ steps.detect_release.outputs.version }}
-          APP_SHA256SUM: ${{ steps.detect_release.outputs.sha256 }}
-        run: |
-          python3 - <<'EOF'
-          import os
-          import re
-          from pathlib import Path
-
-          dockerfile = Path(os.environ["GITHUB_WORKSPACE"]) / "Dockerfile"
-          content = dockerfile.read_text()
-
-          version = os.environ["APP_VERSION"]
-          sha256 = os.environ["APP_SHA256SUM"]
-
-          content, version_count = re.subn(
-              r'(set-cont-env APP_VERSION ")(.*?)(" && \\)',
-              rf'\g<1>{version}\3',
-              content,
-              count=1,
-          )
-          content, sha_count = re.subn(
-              r'(set-cont-env APP_SHA256SUM ")(.*?)(" && \\)',
-              rf'\g<1>{sha256}\3',
-              content,
-              count=1,
-          )
-
-          if version_count != 1 or sha_count != 1:
-              raise SystemExit("Failed to update the expected Dockerfile variables")
-
-          dockerfile.write_text(content)
-          EOF
-
       - name: update build
         id: update_build
         run: |
+          APP_VERSION=${{ steps.detect_release.outputs.version }}
+          APP_SHA256SUM=${{ steps.detect_release.outputs.sha256 }}
+
+          echo "APP_VERSION: $APP_VERSION"
+          echo "APP_SHA256SUM: $APP_SHA256SUM"
+
+          [ -n "$APP_VERSION" ] && [ "$APP_VERSION" != "null" ] && \
+            sed -i "s|set-cont-env APP_VERSION \".*\" && \\\\|set-cont-env APP_VERSION \"$APP_VERSION\" \&\& \\\\|g" "$GITHUB_WORKSPACE/Dockerfile"
+
+          [ -n "$APP_SHA256SUM" ] && [ "$APP_SHA256SUM" != "null" ] && \
+            sed -i "s|set-cont-env APP_SHA256SUM \".*\" && \\\\|set-cont-env APP_SHA256SUM \"$APP_SHA256SUM\" \&\& \\\\|g" "$GITHUB_WORKSPACE/Dockerfile"
+
           # Commit changes if any
           git add Dockerfile
           git config --local user.name "$GIT_USER"
