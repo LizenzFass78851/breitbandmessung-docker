@@ -50,11 +50,13 @@ jobs:
 
       - name: Patch Dockerfile
         id: patch_dockerfile
-        shell: python3
         env:
           APP_VERSION: ${{ steps.detect_release.outputs.version }}
           APP_SHA256SUM: ${{ steps.detect_release.outputs.sha256 }}
         run: |
+          set -euo pipefail
+
+          python3 - <<'EOF'
           import os
           import re
           from pathlib import Path
@@ -82,6 +84,7 @@ jobs:
               raise SystemExit("Failed to update the expected Dockerfile variables")
 
           dockerfile.write_text(content)
+          EOF
 
       - name: update build
         id: update_build
