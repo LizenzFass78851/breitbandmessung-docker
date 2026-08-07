@@ -13,6 +13,8 @@ jobs:
       GIT_USER: github-actions[bot]
       GIT_EMAIL: github-actions[bot]@users.noreply.github.com
       PR_BRANCH_PREFIX: feat/update-tagged_versions
+      YAML_URL: https://download.breitbandmessung.de/bbm/latest-linux.yml
+      BASE_URL: https://download.breitbandmessung.de/bbm
 
     steps:
       - name: clone
@@ -20,29 +22,69 @@ jobs:
         with:
           clean: false
 
-      - name: Find latest tag (update build)
-        id: update_build_find_latest
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPOSITORY: ventoy/PXE
+      - name: Detect latest Breitbandmessung release
+        id: detect_release
         run: |
-          if ! LATEST_TAG=$(gh api repos/$REPOSITORY/releases/latest --jq '.tag_name' 2>/dev/null); then
-            echo "::error::Failed to fetch latest tag for repository $REPOSITORY"
-          elif [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "null" ]; then
-            echo "::warning::No tags found for repository $REPOSITORY"
-          else
-            echo "::notice::Latest tag for repository $REPOSITORY: $LATEST_TAG"
-          fi
-          echo "tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-      - name: update build
-        id: update_build
-        run: |
-          LATEST_TAG_LONG=${{ steps.update_build_find_latest.outputs.tag }}
-          LATEST_TAG=${LATEST_TAG_LONG#v}
-          
-          echo "BUILD_VER: $LATEST_TAG"
+          set -euo pipefail
 
-          [ -n "$LATEST_TAG" ] && [ "$LATEST_TAG" != "null" ] && echo 'patching file' && sed -i "s|ARG IVENTOY_VERSION=.*|ARG IVENTOY_VERSION=\"$LATEST_TAG\"|g" $GITHUB_WORKSPACE/Dockerfile; \
+          if ! YAML=$(wget -qO- "$YAML_URL"); then
+            echo "::error::Failed to download release metadata from $YAML_URL"
+            exit 1
+          fi
+
+          VERSION=$(echo "$YAML" | sed -n 's/^version: //p' | tr -d '\r' | head -n1)
+          DOWNLOAD_PATH=$(echo "$YAML" | sed -n 's/^path: //p' | tr -d '\r' | head -n1)
+
+          if [ -z "$VERSION" ] || [ -z "$DOWNLOAD_PATH" ]; then
+            echo "::error::Unable to parse version/path from release metadata"
+            exit 1
+          fi
+
+          wget -q "$BASE_URL/$DOWNLOAD_PATH" -O /tmp/breitbandmessung.deb
+          SHA256=$(sha256sum /tmp/breitbandmessung.deb | awk '{print $1}')
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "path=$DOWNLOAD_PATH" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "::notice::Latest Breitbandmessung version: $VERSION"
+
+      - name: Patch Dockerfile
+        id: patch_dockerfile
+        env:
+          APP_VERSION: ${{ steps.detect_release.outputs.version }}
+          APP_SHA256SUM: ${{ steps.detect_release.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          dockerfile = Path(os.environ["GITHUB_WORKSPACE"]) / "Dockerfile"
+          content = dockerfile.read_text()
+
+          version = os.environ["APP_VERSION"]
+          sha256 = os.environ["APP_SHA256SUM"]
+
+          content, version_count = re.subn(
+              r'(set-cont-env APP_VERSION ")(.*?)(" && \\)',
+              rf'\g<1>{version}\3',
+              content,
+              count=1,
+          )
+          content, sha_count = re.subn(
+              r'(set-cont-env APP_SHA256SUM ")(.*?)(" && \\)',
+              rf'\g<1>{sha256}\3',
+              content,
+              count=1,
+          )
+
+          if version_count != 1 or sha_count != 1:
+              raise SystemExit("Failed to update the expected Dockerfile variables")
+
+          dockerfile.write_text(content)
+          PY
 
           # Commit changes if any
           git add Dockerfile
@@ -59,14 +101,13 @@ jobs:
       - name: create_pr_branchname
         id: create_pr_branchname
         run: |
-          echo "generating SHA File"
-          hash=$(cat $GITHUB_WORKSPACE/Dockerfile \
-            | sha256sum - --tag \
-            | awk '{print $4}')
+          echo "Generating Dockerfile hash"
+          hash=$(sha256sum "$GITHUB_WORKSPACE/Dockerfile" | awk '{print $1}')
           if [[ "$hash" =~ ^[a-f0-9]{64}$ ]]; then
-            echo "HASH=$hash" > $GITHUB_OUTPUT
+            echo "HASH=$hash" >> "$GITHUB_OUTPUT"
           else
-            echo "::error:: Error: no valid SHA256" >&2 && exit 1
+            echo "::error::No valid SHA256" >&2
+            exit 1
           fi
 
       - name: check if branch as open PR
@@ -122,8 +163,8 @@ jobs:
         run: |
           # create comment content
           cat > /tmp/comment-content.txt <<EOF
-          ### iVentoy Version
-          ${{ steps.update_build_find_latest.outputs.tag }}
+          ### Breitbandmessung Version
+          ${{ steps.detect_release.outputs.version }}
           EOF
           # create comment
           gh pr comment "${{ steps.create_pr.outputs.pull-request-number }}" --body-file /tmp/comment-content.txt
