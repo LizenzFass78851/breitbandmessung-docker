@@ -92,8 +92,8 @@ jobs:
           git config --local user.name ${{ env.GIT_USER }}
           git config --local user.email ${{ env.GIT_EMAIL }}
           if ! git diff --cached --quiet; then
-            git commit -m "feat: Update iventoy to ${LATEST_TAG}"
             echo "updated=true" >> $GITHUB_OUTPUT
+            git commit -m "feat: Update Breitbandmessung to ${APP_VERSION}"
           else
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
