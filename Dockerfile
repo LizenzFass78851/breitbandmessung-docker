@@ -1,5 +1,5 @@
 # Pull base image.
-FROM jlesage/baseimage-gui:ubuntu-26.04-v4.12
+FROM jlesage/baseimage-gui:ubuntu-26.04-v4.13
 
 
 # Install packages
