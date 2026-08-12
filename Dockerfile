@@ -1,5 +1,5 @@
 ﻿# Pull base image.
-FROM jlesage/baseimage-gui:ubuntu-26.04-v4.12
+FROM jlesage/baseimage-gui:ubuntu-26.04-v4.13
 
 # Set by buildx; used to decide whether an Electron runtime has to be added.
 ARG TARGETARCH
