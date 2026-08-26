@@ -7,7 +7,6 @@ variables:
   DOCKER_HUB: "true"
   # Override CI_PROJECT_PATH for using correct DOCKERHUB path
   CI_PROJECT_PATH: "fabianbees/breitbandmessung"
-  VERSION: "3.12.1"
 
 # Build Stages
 stages:
@@ -22,11 +21,21 @@ stages:
   before_script:
     - export BUILD_DATE=$(date '+%Y-%m-%dT%H:%M:%S%:z')
     - |
-      if [[ -z "$CI_COMMIT_TAG" ]]; then
+      export CI_APPLICATION_SHA="$CI_COMMIT_SHORT_SHA"
+
+      if [[ -n "$CI_COMMIT_TAG" ]]; then
+        export CI_APPLICATION_TAG="$CI_COMMIT_TAG"
+        export CI_APPLICATION_TAG_LATEST=""
+      elif [[ "$CI_COMMIT_BRANCH" == "master" ]]; then
         export CI_APPLICATION_TAG="latest"
+        export CI_APPLICATION_TAG_LATEST="latest"
       else
-        export CI_APPLICATION_TAG=${CI_APPLICATION_TAG:-$CI_COMMIT_TAG}
+        export CI_APPLICATION_TAG="$CI_COMMIT_SHORT_SHA"
+        export CI_APPLICATION_TAG_LATEST=""
       fi
+
+      echo "Docker image SHA tag: $CI_APPLICATION_SHA"
+      echo "Docker image primary tag: $CI_APPLICATION_TAG"
     - |
       if [[ "$DOCKER_HUB" == "true" ]]; then
         export CI_REGISTRY_IMAGE=$CI_PROJECT_PATH
@@ -45,9 +54,20 @@ build:amd64:
   tags:
     - amd64
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-amd64" -t "$CI_REGISTRY_IMAGE:$VERSION-amd64" .
-    - docker push "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-amd64"
-    - docker push "$CI_REGISTRY_IMAGE:$VERSION-amd64"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-amd64" .
+    - |
+      if [[ "$CI_APPLICATION_TAG" == "latest" ]]; then
+        docker tag "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-amd64" "$CI_REGISTRY_IMAGE:latest-amd64"
+      else
+        docker tag "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-amd64" "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-amd64"
+      fi
+    - docker push "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-amd64"
+    - |
+      if [[ "$CI_APPLICATION_TAG" == "latest" ]]; then
+        docker push "$CI_REGISTRY_IMAGE:latest-amd64"
+      else
+        docker push "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-amd64"
+      fi
 
 
 # ARM64 Build
@@ -59,9 +79,20 @@ build:arm64:
   tags:
     - arm64
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-arm64" -t "$CI_REGISTRY_IMAGE:$VERSION-arm64" .
-    - docker push "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-arm64"
-    - docker push "$CI_REGISTRY_IMAGE:$VERSION-arm64"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-arm64" .
+    - |
+      if [[ "$CI_APPLICATION_TAG" == "latest" ]]; then
+        docker tag "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-arm64" "$CI_REGISTRY_IMAGE:latest-arm64"
+      else
+        docker tag "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-arm64" "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-arm64"
+      fi
+    - docker push "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-arm64"
+    - |
+      if [[ "$CI_APPLICATION_TAG" == "latest" ]]; then
+        docker push "$CI_REGISTRY_IMAGE:latest-arm64"
+      else
+        docker push "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-arm64"
+      fi
 
 
 # ARMv7 Build
@@ -73,9 +104,20 @@ build:armv7:
   tags:
     - armv7
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-armv7" -t "$CI_REGISTRY_IMAGE:$VERSION-armv7" .
-    - docker push "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-armv7"
-    - docker push "$CI_REGISTRY_IMAGE:$VERSION-armv7"
+    - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-armv7" .
+    - |
+      if [[ "$CI_APPLICATION_TAG" == "latest" ]]; then
+        docker tag "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-armv7" "$CI_REGISTRY_IMAGE:latest-armv7"
+      else
+        docker tag "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-armv7" "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-armv7"
+      fi
+    - docker push "$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-armv7"
+    - |
+      if [[ "$CI_APPLICATION_TAG" == "latest" ]]; then
+        docker push "$CI_REGISTRY_IMAGE:latest-armv7"
+      else
+        docker push "$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-armv7"
+      fi
 
 
 
@@ -84,11 +126,27 @@ build:manifest:
   extends: .build
   stage: release
   script:
-    - echo "Checking amd86 build..." && [[ $CI_BUILD_AMD64 ]] && echo "found" && export CI_MANIFEST_LIST="$CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-amd64" && export CI_MANIFEST_LIST_VERSION="$CI_REGISTRY_IMAGE:$VERSION-amd64"
-    - echo "Checking arm64 build..." && [[ $CI_BUILD_ARM64 ]] && echo "found" && export CI_MANIFEST_LIST="$CI_MANIFEST_LIST $CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-arm64" && echo "found" && export CI_MANIFEST_LIST_VERSION="$CI_MANIFEST_LIST_VERSION $CI_REGISTRY_IMAGE:$VERSION-arm64"
-    - echo "Checking arm build..." && [[ $CI_BUILD_ARMv7 ]] && echo "found" && export CI_MANIFEST_LIST="$CI_MANIFEST_LIST $CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG-armv7" && export CI_MANIFEST_LIST_VERSION="$CI_MANIFEST_LIST_VERSION $CI_REGISTRY_IMAGE:$VERSION-armv7"
+    - echo "Checking amd86 build..." && [[ $CI_BUILD_AMD64 ]] && echo "found" && export CI_MANIFEST_LIST="$CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-amd64"
+    - echo "Checking arm64 build..." && [[ $CI_BUILD_ARM64 ]] && echo "found" && export CI_MANIFEST_LIST="$CI_MANIFEST_LIST $CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-arm64"
+    - echo "Checking arm build..." && [[ $CI_BUILD_ARMv7 ]] && echo "found" && export CI_MANIFEST_LIST="$CI_MANIFEST_LIST $CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA-armv7"
     - export DOCKER_CLI_EXPERIMENTAL=enabled
     - echo $CI_MANIFEST_LIST
-    - echo $CI_MANIFEST_LIST_VERSION
-    - docker manifest create $CI_REGISTRY_IMAGE:$VERSION $CI_MANIFEST_LIST_VERSION && docker manifest push $CI_REGISTRY_IMAGE:$VERSION
-    - docker manifest create $CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG $CI_MANIFEST_LIST && docker manifest push $CI_REGISTRY_IMAGE:$CI_APPLICATION_TAG
+    - docker manifest create $CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA $CI_MANIFEST_LIST && docker manifest push $CI_REGISTRY_IMAGE:$CI_APPLICATION_SHA
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "master" ]]; then
+        export CI_MANIFEST_LIST_LATEST=""
+        [[ $CI_BUILD_AMD64 ]] && export CI_MANIFEST_LIST_LATEST="$CI_MANIFEST_LIST_LATEST $CI_REGISTRY_IMAGE:latest-amd64"
+        [[ $CI_BUILD_ARM64 ]] && export CI_MANIFEST_LIST_LATEST="$CI_MANIFEST_LIST_LATEST $CI_REGISTRY_IMAGE:latest-arm64"
+        [[ $CI_BUILD_ARMv7 ]] && export CI_MANIFEST_LIST_LATEST="$CI_MANIFEST_LIST_LATEST $CI_REGISTRY_IMAGE:latest-armv7"
+        echo $CI_MANIFEST_LIST_LATEST
+        docker manifest create $CI_REGISTRY_IMAGE:latest $CI_MANIFEST_LIST_LATEST && docker manifest push $CI_REGISTRY_IMAGE:latest
+      fi
+    - |
+      if [[ -n "$CI_COMMIT_TAG" ]]; then
+        export CI_MANIFEST_LIST_TAG=""
+        [[ $CI_BUILD_AMD64 ]] && export CI_MANIFEST_LIST_TAG="$CI_MANIFEST_LIST_TAG $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG-amd64"
+        [[ $CI_BUILD_ARM64 ]] && export CI_MANIFEST_LIST_TAG="$CI_MANIFEST_LIST_TAG $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG-arm64"
+        [[ $CI_BUILD_ARMv7 ]] && export CI_MANIFEST_LIST_TAG="$CI_MANIFEST_LIST_TAG $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG-armv7"
+        echo $CI_MANIFEST_LIST_TAG
+        docker manifest create $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG $CI_MANIFEST_LIST_TAG && docker manifest push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
+      fi
