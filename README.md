@@ -99,7 +99,7 @@ services:
 
 ### Start automation via GUI (easy method)
 
-3. To start the script, use the website on the exposed port and put the string 'RUN' in the clipboard. To stop the script, remove the string. You may need to do this twice (error unknown). After a maximum of 15 seconds you should see the screen in action.
+3. To start the script, use the website on the exposed port and put the string 'RUN' in the clipboard. To stop the script, remove the string. You may need to do this twice (error unknown). After a maximum of 60 seconds you should see the screen in action.
 ![Screenshot1](screenshots/clipboard.png)
 
 ```⚠️ If the clipboard method doesn't work for you, please try the following alternate method first, before opening an issue!```
@@ -116,7 +116,13 @@ This creates a empty file called ```RUN``` in the root directory of the containe
 
 ### During the process
 
-4. Speedtesting get's started, the script tries to click through the buttons for running a speedtest every 5 minutes. If the countdown timer (waiting period) has not finished yet, the clicks will do nothing.
+4. Speedtesting get's started, the script clicks through the buttons for running a speedtest every 6 minutes. If the countdown timer (waiting period) has not finished yet, no measurement is started.
+
+   The script finds those buttons by their label on the accessibility bus (AT-SPI) instead of clicking fixed screen coordinates, so it keeps working when the window size or the app layout changes, and it reports what it did instead of clicking blindly:
+
+   ```
+   docker logs -f breitband-desktop
+   ```
 
 5. When all mesurements are done, the automation-script can be stopped by removing the ```/RUN``` file with the following command ```rm /RUN``` inside the docker container or change the content of the clipboard to something else than `RUN` via the GUI.
 
