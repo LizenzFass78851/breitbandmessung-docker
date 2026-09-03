@@ -79,9 +79,10 @@ jobs:
         uses: actions/checkout@v7
         with:
           ref: ${{ matrix.tag.target }}
+          submodules: recursive
 
       - name: Setup QEMU
-        if: ${{ matrix.arch.cpu == 'riscv64' }}
+        if: ${{ contains(matrix.arch.platform, 'linux/riscv64') }}
         uses: docker/setup-qemu-action@v4
 
       - &buildx-setup
@@ -148,9 +149,11 @@ jobs:
           retention-days: 1
 
       - name: Test - start
+        env:
+          PLATFORM: "${{ matrix.arch.platform }}"
         run: |
           sudo docker run -t -d \
-          --name ${{ env.CONTAINER_NAME }} --platform ${{ matrix.arch.platform }} \
+          --name ${{ env.CONTAINER_NAME }} --platform ${PLATFORM%%,*} \
           $(echo "${{ steps.image_name_lower.outputs.full_image_name_lower }}@${{ steps.prebuild.outputs.digest }}" | head -n1)
       - name: Test - check logs
         uses: crazy-max/.github/.github/actions/container-logs-check@main
