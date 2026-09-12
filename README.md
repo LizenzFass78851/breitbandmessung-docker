@@ -129,13 +129,17 @@ This creates a empty file called ```RUN``` in the root directory of the containe
 
 
 
-## Support for ARM-Architecture (Raspberry Pi)
+## Support for ARM-Architecture (Raspberry Pi) - experimental
 
-```⚠️ The ARM-Architecture (➡️ also all Raspberry Pi's) is not supported! ⚠️```
+> Note: only the x86-64 architecture is supported offically. arm64 support is considered experimental!
 
-Support for this architecture currently cannot be provided, as the precompiled binary of the "breitbandmessung.de" program is not available for this architecture.
+The container runs on arm64 (aarch64), so a Raspberry Pi 4 or 5 with a **64-bit** operating system works.
 
-You can try your luck and contact the developers of the official app (https://breitbandmessung.de/impressum ➡️ info@breitbandmessung.de) and ask them to publish a linux .deb package compiled for the aarch64 architecture.
+```⚠️ A 64-bit OS is required. 32-bit ARM (armhf/armv7) is not supported. ⚠️```
+
+The official app is only published as an x86_64 .deb, but the application itself is written in JavaScript — the `.deb` contains no native x86 code beyond the Electron runtime it bundles. On arm64 the container therefore installs a native Electron runtime of the same version the app is built against, and runs the unchanged application code on it. This is native execution, not emulation, so measurement accuracy is not affected by CPU translation.
+
+If you would rather run an unmodified app, ask the developers (https://breitbandmessung.de/impressum ➡️ info@breitbandmessung.de) to publish an official aarch64 build.
 
 
 ## Manually Building the Container (for development purposes)

@@ -1,7 +1,7 @@
 variables:
   CI_BUILD_IMAGE: "docker:latest"
   CI_BUILD_AMD64: "enabled"
-  CI_BUILD_ARM64: ""
+  CI_BUILD_ARM64: "enabled"
   CI_BUILD_ARMv7: ""
   # For using DOCKER_HUB as registry, set this Var to "true"
   DOCKER_HUB: "true"

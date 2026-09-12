@@ -1,6 +1,13 @@
 ﻿# Pull base image.
 FROM jlesage/baseimage-gui:ubuntu-26.04-v4
 
+# Set by buildx; used to decide whether an Electron runtime has to be added.
+ARG TARGETARCH
+
+# The Electron version the app is built against. After an app update, get the
+# new value by running ./scripts/detect-electron-version.sh
+ARG ELECTRON_VERSION=33.1.0
+
 
 # Install packages
 # at-spi2-core, gir1.2-atspi-2.0 and ruby-gobject-introspection provide the
@@ -10,6 +17,24 @@ RUN upg-pkg && \
             at-spi2-core gir1.2-atspi-2.0 gsettings-desktop-schemas libglib2.0-bin \
             ruby ruby-gobject-introspection && \
     locale-gen de_DE.UTF-8
+
+# Install a native Electron runtime on architectures the app does not ship one for:
+RUN ARCH="${TARGETARCH:-$(dpkg --print-architecture)}" && \
+    if [ "$ARCH" != "amd64" ]; then \
+        if [ "$ARCH" != "arm64" ]; then \
+            echo "Unsupported architecture '$ARCH'. Only amd64 and arm64 are supported;" >&2; \
+            echo "the app treats anything else as a 32 bit system and refuses to measure." >&2; \
+            exit 1; \
+        fi; \
+        add-pkg unzip && \
+        wget -q -O /tmp/electron.zip \
+            "https://github.com/electron/electron/releases/download/v${ELECTRON_VERSION}/electron-v${ELECTRON_VERSION}-linux-arm64.zip" && \
+        mkdir -p /opt/electron && \
+        unzip -q /tmp/electron.zip -d /opt/electron && \
+        rm /tmp/electron.zip && \
+        chmod +x /opt/electron/electron && \
+        mv /opt/electron/electron /opt/electron/breitbandmessung; \
+    fi
 
 # Generate and install favicons.
 # alternative logo: https://breitbandmessung.de/images/breitbandmessung-logo.png
@@ -28,6 +53,7 @@ RUN rm -f /etc/cont-env.d/NO_AT_BRIDGE /etc/cont-env.d/GTK_A11Y && \
 
 # Set internal environment variables.
 # see: https://download.breitbandmessung.de/bbm/
+# APP_VERSION and APP_SHA256SUM are printed by ./scripts/detect-electron-version.sh
 RUN \
     set-cont-env APP_NAME "Breitbandmessung" && \
     set-cont-env APP_VERSION "3.12.1" && \
