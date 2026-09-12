@@ -43,6 +43,7 @@ RUN APP_ICON_URL=https://web.archive.org/web/20260930161239/https://www.breitban
 
 # Add files.
 COPY rootfs/ /
+COPY --chmod=+x scripts/detect-electron-version.sh /usr/local/bin/detect-electron-version.sh
 
 # The base image switches accessibility off for the apps it hosts. The
 # automation service reads the app's widget tree from the accessibility bus, so
