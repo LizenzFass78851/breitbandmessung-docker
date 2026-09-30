@@ -186,6 +186,7 @@ jobs:
             IMAGE=$(echo "${{ steps.image_name_lower.outputs.full_image_name_lower }}@${{ steps.prebuild.outputs.digest }}" | head -n1)
           fi
           sudo docker run -t -d \
+          -e "CHECK_FOR_UPDATES=true" \
           --name ${{ env.CONTAINER_NAME }} --platform ${PLATFORM%%,*} \
           ${IMAGE}
       - name: Test - check logs
