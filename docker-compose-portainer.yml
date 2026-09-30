@@ -2,7 +2,6 @@
 #% PORT: Port for Webinterface (Example: 5800) [5800]
 
 # Compose file for portainer
-version: "3.8"
 services:
   breitband-desktop:
     image: ghcr.io/lizenzfass78851/breitbandmessung-docker:latest
