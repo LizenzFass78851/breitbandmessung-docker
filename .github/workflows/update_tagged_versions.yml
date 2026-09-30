@@ -19,8 +19,6 @@ jobs:
     steps:
       - name: clone
         uses: actions/checkout@v7
-        with:
-          clean: false
 
       - name: Detect latest Breitbandmessung release
         id: detect_release
@@ -156,4 +154,3 @@ jobs:
 #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #       run: |
 #         gh workflow run docker-image.yml
-
