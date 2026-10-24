@@ -38,7 +38,7 @@ RUN ARCH="${TARGETARCH:-$(dpkg --print-architecture)}" && \
 
 # Generate and install favicons.
 # alternative logo: https://breitbandmessung.de/images/breitbandmessung-logo.png
-RUN APP_ICON_URL=https://www.breitbandmessung.de/public/images/appicon-512.png && \
+RUN APP_ICON_URL=https://web.archive.org/web/20260930161239/https://www.breitbandmessung.de/public/images/appicon-512.png && \
     install_app_icon.sh "$APP_ICON_URL"
 
 # Add files.
