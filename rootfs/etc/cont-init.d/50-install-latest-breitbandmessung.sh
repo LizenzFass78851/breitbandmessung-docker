@@ -38,7 +38,7 @@ else
     echo "$(uname -m) detected, unpacking the application without its x86_64 runtime ..."
     mkdir -p /opt/Breitbandmessung
     dpkg-deb --fsys-tarfile "Festnetz-Check-$APP_VERSION-linux.deb" \
-        | tar -x -C /opt/Breitbandmessung --strip-components=3 ./opt/Breitbandmessung/resources
+        | tar -x -C /opt/Breitbandmessung --strip-components=3 ./opt/Festnetz-Check/resources
 
     # The app only considers x86_64 a supported system and would keep its
     # measurement menu disabled otherwise.
