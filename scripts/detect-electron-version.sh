@@ -32,10 +32,10 @@ if [ -z "$APP_VERSION" ]; then
     RELEASE_DATE="$(echo "$MANIFEST" | sed -n "s/^releaseDate: *'\(.*\)'/\1/p")"
     echo "latest release is $APP_VERSION (${RELEASE_DATE:-date unknown})"
 fi
-DEB="$WORK_DIR/Breitbandmessung-${APP_VERSION}-linux.deb"
+DEB="$WORK_DIR/Festnetz-Check-${APP_VERSION}-linux.deb"
 
-echo "downloading Breitbandmessung-${APP_VERSION}-linux.deb ..."
-wget -q -O "$DEB" "$BASE_URL/Breitbandmessung-${APP_VERSION}-linux.deb"
+echo "downloading Festnetz-Check-${APP_VERSION}-linux.deb ..."
+wget -q -O "$DEB" "$BASE_URL/Festnetz-Check-${APP_VERSION}-linux.deb"
 
 if [ -n "${EXPECTED_SHA512:-}" ]; then
     EXPECTED_HEX="$(echo "$EXPECTED_SHA512" | base64 -d | od -An -tx1 | tr -d ' \n')"
