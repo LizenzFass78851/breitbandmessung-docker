@@ -56,7 +56,7 @@ RUN rm -f /etc/cont-env.d/NO_AT_BRIDGE /etc/cont-env.d/GTK_A11Y && \
 RUN \
     set-cont-env APP_NAME "Breitbandmessung" && \
     set-cont-env APP_VERSION "3.13.0" && \
-    set-cont-env APP_SHA512SUM "x2sLL1EcQdYxwULBcrwHGmCwqek71Fs1aMDiy6bemEhJE2kYy1aIc8+SiqUv8JIxAS7bf1AKxQpT9mNlFoyLMw==" && \
+    set-cont-env APP_SHA512SUM "c76b0b2f511c41d631c142c172bc071a60b0a9e93bd45b3568c0e2cba6de984849136918cb568873cf928aa52ff09231012edb7f500ac50a53f66365168c8b33" && \
     set-cont-env DEBIAN_FRONTEND "noninteractive" && \
     set-cont-env LANG "de_DE.UTF-8" &&  \
     # Ignore upstream deprecation warning in logs
