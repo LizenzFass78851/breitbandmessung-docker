@@ -37,27 +37,27 @@ jobs:
           fi
 
           wget -q "$BASE_URL/$DOWNLOAD_PATH" -O /tmp/breitbandmessung.deb
-          SHA256=$(sha256sum /tmp/breitbandmessung.deb | awk '{print $1}')
+          SHA512=$(sha512sum /tmp/breitbandmessung.deb | awk '{print $1}')
 
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "path=$DOWNLOAD_PATH" >> "$GITHUB_OUTPUT"
-          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
+          echo "sha512=$SHA512" >> "$GITHUB_OUTPUT"
           echo "::notice::Latest Breitbandmessung version: $VERSION"
 
       - name: update build
         id: update_build
         run: |
           APP_VERSION=${{ steps.detect_release.outputs.version }}
-          APP_SHA256SUM=${{ steps.detect_release.outputs.sha256 }}
+          APP_SHA512SUM=${{ steps.detect_release.outputs.sha512 }}
 
           echo "APP_VERSION: $APP_VERSION"
-          echo "APP_SHA256SUM: $APP_SHA256SUM"
+          echo "APP_SHA512SUM: $APP_SHA512SUM"
 
           [ -n "$APP_VERSION" ] && [ "$APP_VERSION" != "null" ] && \
             sed -i "s|set-cont-env APP_VERSION \".*\" && \\\\|set-cont-env APP_VERSION \"$APP_VERSION\" \&\& \\\\|g" "$GITHUB_WORKSPACE/Dockerfile"
 
-          [ -n "$APP_SHA256SUM" ] && [ "$APP_SHA256SUM" != "null" ] && \
-            sed -i "s|set-cont-env APP_SHA256SUM \".*\" && \\\\|set-cont-env APP_SHA256SUM \"$APP_SHA256SUM\" \&\& \\\\|g" "$GITHUB_WORKSPACE/Dockerfile"
+          [ -n "$APP_SHA512SUM" ] && [ "$APP_SHA512SUM" != "null" ] && \
+            sed -i "s|set-cont-env APP_SHA512SUM \".*\" && \\\\|set-cont-env APP_SHA512SUM \"$APP_SHA512SUM\" \&\& \\\\|g" "$GITHUB_WORKSPACE/Dockerfile"
 
           # Commit changes if any
           git add Dockerfile
